@@ -1,0 +1,27 @@
+# Python
+backend/venv/
+__pycache__/
+*.pyc
+*.pyo
+.env
+*.egg-info/
+.pytest_cache/
+
+# Xcode
+xcuserdata/
+DerivedData/
+*.xccheckout
+*.moved-aside
+build/
+*.pbxuser
+*.mode1v3
+*.mode2v3
+*.perspectivev3
+
+# macOS
+.DS_Store
+
+# Editor
+.vscode/
+.idea/
+.claude/
