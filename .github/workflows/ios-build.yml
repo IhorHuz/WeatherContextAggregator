@@ -1,0 +1,27 @@
+name: iOS Build Check
+
+on:
+  push:
+    paths:
+      - 'WeatherContextAggregator/**'
+  pull_request:
+    paths:
+      - 'WeatherContextAggregator/**'
+
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build for simulator
+        run: |
+          xcodebuild \
+            -project WeatherContextAggregator/WeatherContextAggregator.xcodeproj \
+            -scheme WeatherContextAggregator \
+            -sdk iphonesimulator \
+            -destination 'platform=iOS Simulator,name=iPhone 16' \
+            -configuration Debug \
+            build \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO
