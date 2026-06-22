@@ -4,7 +4,6 @@ from app.services.exceptions import UpstreamHTTPError, UpstreamParseError, Upstr
 
 NOMINATIM_URL = "https://nominatim.openstreetmap.org/reverse"
 
-# Nominatim address keys that represent interesting nearby features
 _FEATURE_KEYS = ["suburb", "city_district", "district", "neighbourhood", "quarter", "county"]
 
 _LOCALITY_TYPE_MAP = {
@@ -38,7 +37,6 @@ def _locality_type_from_address(address: dict, addresstype_fallback: str) -> str
 
 
 def _region_from_address(address: dict) -> str:
-    """Return the best available administrative region name."""
     for key in ("state", "region", "state_district", "county"):
         value = address.get(key, "").strip()
         if value:

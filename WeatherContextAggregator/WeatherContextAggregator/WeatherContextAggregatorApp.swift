@@ -1,10 +1,3 @@
-//
-//  WeatherContextAggregatorApp.swift
-//  WeatherContextAggregator
-//
-***REMOVED***
-//
-
 import SwiftUI
 
 @main

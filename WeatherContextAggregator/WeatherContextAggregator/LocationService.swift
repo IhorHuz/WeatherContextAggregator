@@ -18,7 +18,6 @@ final class LocationService: NSObject {
         manager.desiredAccuracy = kCLLocationAccuracyHundredMeters
     }
 
-    /// Returns the current device location, requesting permission if needed.
     func fetchLocation() async throws -> CLLocation {
         try await withCheckedThrowingContinuation { cont in
             continuation = cont
@@ -52,8 +51,6 @@ final class LocationService: NSObject {
         return name.isEmpty ? "Unknown" : name
     }
 }
-
-// MARK: - CLLocationManagerDelegate
 
 extension LocationService: CLLocationManagerDelegate {
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
