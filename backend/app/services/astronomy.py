@@ -31,6 +31,8 @@ async def get_astronomy(lat: float, lon: float, timezone: str = "UTC") -> Astron
         raise UpstreamTimeoutError("sunrisesunset") from exc
     except httpx.HTTPStatusError as exc:
         raise UpstreamHTTPError("sunrisesunset", exc.response.status_code) from exc
+    except httpx.RequestError as exc:
+        raise UpstreamTimeoutError("sunrisesunset") from exc
 
     try:
         data = resp.json()["results"]

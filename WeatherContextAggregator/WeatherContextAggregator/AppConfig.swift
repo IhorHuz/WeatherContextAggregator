@@ -1,13 +1,15 @@
 import Foundation
 
 enum AppConfig {
-    // For the iOS Simulator use http://localhost:8000 (default below).
-    // For a physical device on the same LAN, replace with your machine's local IP.
-    static let backendBaseURL: String = {
-        #if DEBUG
-        return "http://192.168.1.183:8000"
-        #else
-        return "https://your-backend.up.railway.app"
-        #endif
-    }()
+    static let backendBaseURL = "https://weathercontextaggregator-production.up.railway.app"
 }
+
+// For iOS Simulator: http://localhost:8000
+// For a physical device on the same LAN: machine's local IP.
+//  static let backendBaseURL: String = {
+//        #if DEBUG
+//        return "http://localhost:8000"
+//        #else
+//        return "https://weathercontextaggregator-production.up.railway.app/"
+//        #endif
+//    }()

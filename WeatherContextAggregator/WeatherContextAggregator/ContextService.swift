@@ -2,10 +2,12 @@ import Foundation
 
 enum ContextError: LocalizedError {
     case httpError(Int)
+    case invalidURL
 
     var errorDescription: String? {
         switch self {
         case .httpError(let code): return "Server returned HTTP \(code)."
+        case .invalidURL: return "Invalid server URL."
         }
     }
 }
@@ -20,7 +22,9 @@ final class ContextService {
     }()
 
     func fetchContext(lat: Double, lon: Double, city: String, timezone: String) async throws -> ContextResponse {
-        let url = URL(string: "\(baseURL)/context")!
+        guard let url = URL(string: "\(baseURL)/context") else {
+            throw ContextError.invalidURL
+        }
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")

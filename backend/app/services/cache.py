@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 
 @dataclass
@@ -15,12 +15,12 @@ class TTLCache:
 
     def get(self, key: str):
         entry = self._store.get(key)
-        if entry and datetime.utcnow() < entry.expires_at:
+        if entry and datetime.now(timezone.utc) < entry.expires_at:
             return entry.value
         return None
 
     def set(self, key: str, value: object) -> None:
-        self._store[key] = _Entry(value=value, expires_at=datetime.utcnow() + self._ttl)
+        self._store[key] = _Entry(value=value, expires_at=datetime.now(timezone.utc) + self._ttl)
 
 
 context_cache = TTLCache(ttl_seconds=600)

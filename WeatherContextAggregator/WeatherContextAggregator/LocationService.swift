@@ -2,9 +2,15 @@ import CoreLocation
 
 enum LocationError: LocalizedError {
     case permissionDenied
+    case geocodingFailed
 
     var errorDescription: String? {
-        "Location access denied. Enable it in Settings > Privacy > Location Services."
+        switch self {
+        case .permissionDenied:
+            return "Location access denied. Enable it in Settings > Privacy > Location Services."
+        case .geocodingFailed:
+            return "Failed to resolve location name."
+        }
     }
 }
 
@@ -39,13 +45,16 @@ final class LocationService: NSObject {
 
     /// Reverse-geocodes a location to a city name via BigDataCloud's client-side API.
     func fetchCityName(for location: CLLocation) async throws -> String {
-        var comps = URLComponents(string: "https://api.bigdatacloud.net/data/reverse-geocode-client")!
+        guard var comps = URLComponents(string: "https://api.bigdatacloud.net/data/reverse-geocode-client") else {
+            throw LocationError.geocodingFailed
+        }
         comps.queryItems = [
             URLQueryItem(name: "latitude",        value: "\(location.coordinate.latitude)"),
             URLQueryItem(name: "longitude",       value: "\(location.coordinate.longitude)"),
             URLQueryItem(name: "localityLanguage", value: "en"),
         ]
-        let (data, _) = try await URLSession.shared.data(from: comps.url!)
+        guard let url = comps.url else { throw LocationError.geocodingFailed }
+        let (data, _) = try await URLSession.shared.data(from: url)
         let decoded = try JSONDecoder().decode(BigDataCloudResponse.self, from: data)
         let name = decoded.city.isEmpty ? decoded.locality : decoded.city
         return name.isEmpty ? "Unknown" : name

@@ -44,6 +44,8 @@ async def get_weather(lat: float, lon: float) -> tuple[WeatherInfo, str]:
         raise UpstreamTimeoutError("open_meteo") from exc
     except httpx.HTTPStatusError as exc:
         raise UpstreamHTTPError("open_meteo", exc.response.status_code) from exc
+    except httpx.RequestError as exc:
+        raise UpstreamTimeoutError("open_meteo") from exc
 
     try:
         forecast_json = forecast_resp.json()

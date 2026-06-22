@@ -69,6 +69,8 @@ async def get_locality(lat: float, lon: float, city: str) -> LocalityInfo:
         raise UpstreamTimeoutError("nominatim") from exc
     except httpx.HTTPStatusError as exc:
         raise UpstreamHTTPError("nominatim", exc.response.status_code) from exc
+    except httpx.RequestError as exc:
+        raise UpstreamTimeoutError("nominatim") from exc
 
     try:
         data = resp.json()
