@@ -19,7 +19,7 @@ jobs:
             -project WeatherContextAggregator/WeatherContextAggregator.xcodeproj \
             -scheme WeatherContextAggregator \
             -sdk iphonesimulator \
-            -destination 'platform=iOS Simulator,name=iPhone 16' \
+            -destination 'generic/platform=iOS Simulator' \
             -configuration Debug \
             build \
             CODE_SIGN_IDENTITY="" \
