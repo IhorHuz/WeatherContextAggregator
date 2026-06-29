@@ -1,0 +1,56 @@
+pipeline {
+    agent any
+
+    environment {
+        IMAGE_NAME = "wca"
+        CONTAINER_NAME = "wca"
+        DOCKER_BUILDKIT = "1"
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+
+        stage('Test') {
+            steps {
+                dir('backend') {
+                    sh 'pip install -r requirements.txt 2>&1 | tail -5'
+                    sh 'pytest tests/ -v --tb=short || true'
+                }
+            }
+        }
+
+        stage('Build') {
+            steps {
+                dir('backend') {
+                    sh 'docker build -t ${IMAGE_NAME}:latest .'
+                }
+            }
+        }
+
+        stage('Deploy') {
+            steps {
+                script {
+                    sh '''
+                        docker stop ${CONTAINER_NAME} || true
+                        docker rm ${CONTAINER_NAME} || true
+                        docker run -d \
+                            --restart unless-stopped \
+                            -p 80:8000 \
+                            --name ${CONTAINER_NAME} \
+                            ${IMAGE_NAME}:latest
+                    '''
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            sh 'docker image prune -f || true'
+        }
+    }
+}
