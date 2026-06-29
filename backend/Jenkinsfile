@@ -17,8 +17,9 @@ pipeline {
         stage('Test') {
             steps {
                 dir('backend') {
-                    sh 'pip install -r requirements.txt 2>&1 | tail -5'
-                    sh 'pytest tests/ -v --tb=short || true'
+                    sh 'pip3 install -r requirements.txt 2>&1 | tail -5'
+                    sh 'pip3 install pytest pytest-asyncio respx 2>&1 | tail -3'
+                    sh 'python3 -m pytest tests/ -v --tb=short || true'
                 }
             }
         }
