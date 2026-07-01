@@ -40,7 +40,7 @@ pipeline {
                         docker rm ${CONTAINER_NAME} || true
                         docker run -d \
                             --restart unless-stopped \
-                            -p 80:8000 \
+                            -p 8081:8000 \
                             --name ${CONTAINER_NAME} \
                             ${IMAGE_NAME}:latest
                     '''

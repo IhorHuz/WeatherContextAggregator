@@ -98,6 +98,14 @@ resource "aws_security_group" "ips_sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
+  ingress {
+    description = "HTTPS"
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
   egress {
     from_port   = 0
     to_port     = 0
@@ -146,16 +154,47 @@ apt-get install -y -qq docker-ce docker-ce-cli containerd.io docker-compose-plug
 
 usermod -aG docker ubuntu
 
+# ── Clone and build the app ──
 cd /opt
 git clone https://github.com/IhorHuz/WeatherContextAggregator.git
 cd WeatherContextAggregator/backend
-
 docker build -t wca:latest .
 docker run -d \
   --restart unless-stopped \
-  -p 80:8000 \
+  -p 8081:8000 \
   --name wca \
   wca:latest
+
+# ── Nginx reverse proxy with self-signed SSL ──
+apt-get install -y -qq nginx
+mkdir -p /etc/nginx/ssl
+openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+  -keyout /etc/nginx/ssl/ips.key \
+  -out /etc/nginx/ssl/ips.crt \
+  -subj "/C=DE/ST=Berlin/L=Berlin/O=IPS/CN=${public_ip}" 2>/dev/null
+
+rm -f /etc/nginx/sites-enabled/default
+cat > /etc/nginx/sites-available/ips << 'NGINX'
+server {
+    listen 80;
+    server_name _;
+    return 301 https://$host$request_uri;
+}
+server {
+    listen 443 ssl;
+    server_name _;
+    ssl_certificate /etc/nginx/ssl/ips.crt;
+    ssl_certificate_key /etc/nginx/ssl/ips.key;
+    location / {
+        proxy_pass http://127.0.0.1:8081;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
+}
+NGINX
+ln -sf /etc/nginx/sites-available/ips /etc/nginx/sites-enabled/
+systemctl enable --now nginx
+ufw allow https
 EOF
 
   tags = {
