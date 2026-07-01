@@ -11,7 +11,7 @@ terraform {
     key            = "infrastructure/terraform.tfstate"
     region         = "eu-central-1"
     profile        = "ips-dev"
-    dynamodb_table = "ips-terraform-locks"
+    use_lockfile = true
     encrypt        = true
   }
 }
@@ -137,6 +137,7 @@ resource "aws_instance" "ips_server" {
   subnet_id              = aws_subnet.ips_public_subnet.id
   vpc_security_group_ids = [aws_security_group.ips_sg.id]
   key_name               = aws_key_pair.ips_key.key_name
+  iam_instance_profile   = aws_iam_instance_profile.cloudwatch_profile.name
 
   user_data = <<EOF
 #!/bin/bash
@@ -171,7 +172,7 @@ mkdir -p /etc/nginx/ssl
 openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
   -keyout /etc/nginx/ssl/ips.key \
   -out /etc/nginx/ssl/ips.crt \
-  -subj "/C=DE/ST=Berlin/L=Berlin/O=IPS/CN=${public_ip}" 2>/dev/null
+  -subj "/C=DE/ST=Berlin/L=Berlin/O=IPS/CN=_" 2>/dev/null
 
 rm -f /etc/nginx/sites-enabled/default
 cat > /etc/nginx/sites-available/ips << 'NGINX'
@@ -195,6 +196,33 @@ NGINX
 ln -sf /etc/nginx/sites-available/ips /etc/nginx/sites-enabled/
 systemctl enable --now nginx
 ufw allow https
+
+wget -q https://s3.amazonaws.com/amazoncloudwatch-agent/ubuntu/amd64/latest/amazon-cloudwatch-agent.deb
+dpkg -i -E amazon-cloudwatch-agent.deb 2>/dev/null
+mkdir -p /opt/aws/amazon-cloudwatch-agent/etc/
+cat > /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json << 'CWJSON'
+{
+  "metrics": {
+    "metrics_collected": {
+      "cpu": {"measurement": ["cpu_usage_idle", "cpu_usage_user", "cpu_usage_system"]},
+      "mem": {"measurement": ["mem_used_percent"]},
+      "disk": {"measurement": ["disk_used_percent"], "resources": ["*"], "ignore_file_system_types": ["sysfs", "devtmpfs", "tmpfs"]}
+    }
+  },
+  "logs": {
+    "logs_collected": {
+      "files": {
+        "collect_list": [
+          {"file_path": "/var/log/nginx/access.log", "log_group_name": "ips-nginx-access", "log_stream_name": "{instance_id}"},
+          {"file_path": "/var/log/nginx/error.log", "log_group_name": "ips-nginx-error", "log_stream_name": "{instance_id}"}
+        ]
+      }
+    }
+  }
+}
+CWJSON
+/opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a fetch-config -m ec2 -s -c file:/opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json 2>/dev/null
+systemctl enable --now amazon-cloudwatch-agent 2>/dev/null || true
 EOF
 
   tags = {
