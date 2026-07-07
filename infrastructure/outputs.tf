@@ -22,3 +22,8 @@ output "state_bucket_name" {
   description = "S3 bucket holding remote Terraform state"
   value       = aws_s3_bucket.terraform_state.id
 }
+
+output "route53_nameservers" {
+  description = "Route 53 nameservers — copy these into Namecheap custom DNS"
+  value       = aws_route53_zone.main.name_servers
+}

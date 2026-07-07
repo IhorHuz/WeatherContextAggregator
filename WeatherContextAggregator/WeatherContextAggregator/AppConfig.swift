@@ -1,5 +1,5 @@
 import Foundation
 
 enum AppConfig {
-    static let backendBaseURL = "https://63.181.168.177"
+    static let backendBaseURL = "https://api.catapultwelcomebonus.xyz"
 }
